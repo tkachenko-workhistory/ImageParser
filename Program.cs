@@ -10,7 +10,7 @@ namespace ImageParser
             var parser = new ImageParser();
             string imageInfoJson;
 
-            using (var file = new FileStream("image.png", FileMode.Open, FileAccess.Read))
+            using (var file = new FileStream("image.bmp", FileMode.Open, FileAccess.Read))
             {
                 imageInfoJson = parser.GetImageInfo(file);
             }
