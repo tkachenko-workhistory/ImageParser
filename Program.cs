@@ -7,10 +7,12 @@ namespace ImageParser
     {
         public static void Main(string[] args)
         {
+            //byte[] bytes = BitConverter.GetBytes(480);
+
             var parser = new ImageParser();
             string imageInfoJson;
 
-            using (var file = new FileStream("image.bmp", FileMode.Open, FileAccess.Read))
+            using (var file = new FileStream("image.gif", FileMode.Open, FileAccess.Read))
             {
                 imageInfoJson = parser.GetImageInfo(file);
             }

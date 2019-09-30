@@ -55,16 +55,22 @@ namespace ImageParser
             var info = new ImageInfo();
             info.Format = "gif";
 
+            stream.Position = 13;
+            // Пропускаем таблицу цветов
+            byte[] buffer = new byte[3];
+            do
+            {
+                stream.Read(buffer, 0, 3);
+            }
+            while (buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFF);
+
             // Ищем блок изображения
-            byte[] buffer = new byte[1];
-            string type = "";
-            while (type != "2c")
+            buffer = new byte[1];
+            do
             {
                 stream.Read(buffer, 0, 1);
-                StringBuilder sb = new StringBuilder(buffer.Length * 2);
-                sb.AppendFormat("{0:x2}", buffer[0]);
-                type = sb.ToString();
             }
+            while (buffer[0] != 0x2c);
 
             buffer = new byte[4];
             stream.Position += 4;
