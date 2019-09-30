@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Text;
@@ -25,7 +26,7 @@ namespace ImageParser
             else
                 throw new Exception("Неподдерживаемый формат");
 
-            return "";
+            return JsonConvert.SerializeObject(info);
         }
 
         private ImageInfo GetPngInfo(Stream stream)
