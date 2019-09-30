@@ -29,38 +29,64 @@ namespace ImageParser
              long length = stream.Length;*/
 
             // BMP
-            byte[] buffer = new byte[2];
-            stream.Read(buffer, 0, 2);
-            // 4D42/424D (little-endian / big-endian).
-            StringBuilder sb = new StringBuilder(buffer.Length * 2);
-            foreach (byte b in buffer)
-                sb.AppendFormat("{0:x2}", b);
-            var type = sb.ToString();
+            /* byte[] buffer = new byte[2];
+             stream.Read(buffer, 0, 2);
+             // 4D42/424D (little-endian / big-endian).
+             StringBuilder sb = new StringBuilder(buffer.Length * 2);
+             foreach (byte b in buffer)
+                 sb.AppendFormat("{0:x2}", b);
+             var type = sb.ToString();
 
+             buffer = new byte[4];
+             stream.Read(buffer, 0, 4);
+             var length = BitConverter.ToInt32(buffer, 0);
+
+             buffer = new byte[7];
+             stream.Position = 16;
+             stream.Read(buffer, 0, 4);
+             var width = 0;
+             for (int i = 0; i < 4; i++)
+                 if (buffer[i] != 0)
+                 {
+                     width = BitConverter.ToInt32(buffer, i);
+                     break;
+                 }
+
+             stream.Position = 20;
+             stream.Read(buffer, 0, 4);
+             var height = 0;
+             for (int i = 0; i < 4; i++)
+                 if (buffer[i] != 0)
+                 {
+                     height = BitConverter.ToInt32(buffer, i);
+                     break;
+                 }*/
+
+            // GIF
+            byte[] buffer = new byte[6];
+            // Читаем расширение
+            stream.Read(buffer, 0, 6);
+            string s = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
+            // ищем блок изображения
+            buffer = new byte[1];
+            string type = "";
+            while (type != "2c")
+            {
+                stream.Read(buffer, 0, 1);
+                StringBuilder sb = new StringBuilder(buffer.Length * 2);
+                // ToDo: можно пропускать расширения, узнав их длину в байтах
+                sb.AppendFormat("{0:x2}", buffer[0]);
+                type = sb.ToString();
+            }
             buffer = new byte[4];
-            stream.Read(buffer, 0, 4);
-            var length = BitConverter.ToInt32(buffer, 0);
+            stream.Position += 4;
+            stream.Read(buffer, 0, 2);
+            var width = BitConverter.ToInt32(buffer, 0);
+            stream.Read(buffer, 0, 2);
+            var height = BitConverter.ToInt32(buffer, 0);
 
-            buffer = new byte[7];
-            stream.Position = 16;
-            stream.Read(buffer, 0, 4);
-            var width = 0;
-            for (int i = 0; i < 4; i++)
-                if (buffer[i] != 0)
-                {
-                    width = BitConverter.ToInt32(buffer, i);
-                    break;
-                }
+            long length = stream.Length;
 
-            stream.Position = 20;
-            stream.Read(buffer, 0, 4);
-            var height = 0;
-            for (int i = 0; i < 4; i++)
-                if (buffer[i] != 0)
-                {
-                    height = BitConverter.ToInt32(buffer, i);
-                    break;
-                }
 
             return "";
 
