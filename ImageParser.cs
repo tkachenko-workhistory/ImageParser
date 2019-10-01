@@ -33,28 +33,22 @@ namespace ImageParser
 
         private ImageInfo GetPngInfo(Stream stream)
         {
-            var info = new ImageInfo();
-            info.Format = "png";
+            var info = new ImageInfo("png", stream.Length);
 
             stream.Position = 16; // Переходим на позицию чтения Chunks
             byte[] buffer = new byte[4];
             stream.Read(buffer, 0, 4);
             info.Width = BitConverter.ToInt32(new byte[4] { buffer[3], buffer[2], buffer[1], buffer[0] }, 0);
-
             buffer = new byte[4];
             stream.Read(buffer, 0, 4);
             info.Height = BitConverter.ToInt32(new byte[4] { buffer[3], buffer[2], buffer[1], buffer[0] }, 0);
-
-            info.Size = stream.Length;
 
             return info;
         }
 
         private ImageInfo GetGifInfo(Stream stream)
         {
-            var info = new ImageInfo();
-            info.Format = "gif";
-
+            var info = new ImageInfo("gif", stream.Length);
             stream.Position = 13;
             // Пропускаем таблицу цветов
             byte[] buffer = new byte[3];
@@ -74,22 +68,17 @@ namespace ImageParser
 
             buffer = new byte[4];
             stream.Position += 4;
-
             stream.Read(buffer, 0, 2);
             info.Width = BitConverter.ToInt32(buffer, 0);
-
             stream.Read(buffer, 0, 2);
             info.Height = BitConverter.ToInt32(buffer, 0);
-
-            info.Size = stream.Length;
 
             return info;
         }
 
         private ImageInfo GetBmpInfo(Stream stream, bool bigEndian)
         {
-            var info = new ImageInfo();
-            info.Format = "bmp";
+            var info = new ImageInfo("bmp", stream.Length);
 
             // Определить версию структуры
             byte[] buffer = new byte[4];
@@ -97,34 +86,57 @@ namespace ImageParser
             stream.Read(buffer, 0, 4);
             int version = BitConverter.ToInt32(buffer, 0);
 
-            info.Size = stream.Length;
-
-            if (!bigEndian)
-                throw new Exception("littleEndian " + info.Height);
-
             if (version == 40 || version == 108 || version == 124)
             // Соответствует 3, 4 и 5 версии
             {
                 buffer = new byte[4];
                 stream.Position = 18;
                 stream.Read(buffer, 0, 4);
+                if (!bigEndian)
+                    Array.Reverse(buffer);
                 info.Width = BitConverter.ToInt32(buffer, 0);
 
                 buffer = new byte[4];
                 stream.Read(buffer, 0, 4);
-                info.Height = BitConverter.ToInt32(buffer, 0);
+                if (!bigEndian)
+                    Array.Reverse(buffer);
+                // Порядок следования строк может быть показан знаком - поэтому нужно абсолютное значение
+                info.Height = Math.Abs(BitConverter.ToInt32(buffer, 0));
             }
             else if (version == 12)
-            // CORE
+            // CORE версия
             {
-                throw new Exception("core " + info.Height);
+                buffer = new byte[4];
+                stream.Position = 12;
+                stream.Read(buffer, 0, 2);
+                if (!bigEndian)
+                    ReverseTwoBits(buffer);
+                info.Width = BitConverter.ToInt32(buffer, 0);
+
+                stream.Read(buffer, 0, 2);
+                if (!bigEndian)
+                    ReverseTwoBits(buffer);
+                info.Height = BitConverter.ToInt32(buffer, 0);
             }
             return info;
         }
 
+        private void ReverseTwoBits(byte[] buffer)
+        {
+            // Перевренуть надо не весь массив
+            byte c = buffer[0];
+            buffer[0] = buffer[1];
+            buffer[1] = c;
+        }
 
         class ImageInfo
         {
+            public ImageInfo(string format, long size)
+            {
+                Format = format;
+                Size = size;
+            }
+
             public string Format { get; set; }
 
             public int Width { get; set; }
